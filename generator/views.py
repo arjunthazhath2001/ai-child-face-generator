@@ -3,7 +3,8 @@ from rest_framework.response import Response
 from .s3 import generate_presigned_url
 from django.conf import settings
 import uuid
-from .models import FatherModel
+from .models import FatherModel,MotherModel, ChildImage
+from rest_framework.permissions import IsAuthenticated
 
 class GeneratePresignedURLView(APIView):
     
@@ -33,6 +34,8 @@ class GeneratePresignedURLView(APIView):
 
 
 class UploadFatherImage(APIView):
+    permission_classes=[IsAuthenticated]
+
     def post(self,request):
         file_url= request.data.get('file_url')
         
@@ -45,6 +48,56 @@ class UploadFatherImage(APIView):
         father= FatherModel.objects.create(user=user,url=file_url)
         
         if father:
-            return Response({"message":"success"},status=200)
+            return Response({"message":father.id},status=200)
         else:
             return Response({"error":"Try uploading again"},status=400)
+        
+    
+class UploadMotherImage(APIView):
+    permission_classes=[IsAuthenticated]
+    def post(self,request):
+        file_url= request.data.get('file_url')
+        
+        if not file_url:
+            return Response({"error":"File url not found"})
+        
+        user= request.user
+        
+        
+        mother= MotherModel.objects.create(user=user,url=file_url)
+        
+        if mother:
+            return Response({"message":mother.id},status=200)
+        else:
+            return Response({"error":"Try uploading again"},status=400)
+        
+
+class GenerateChildImage(APIView):
+    permission_classes=[IsAuthenticated]
+    
+    def post(self,request):
+        user= request.user
+        
+        father_id= request.data.get('father_id')
+        mother_id= request.data.get('mother_id')
+        
+        father_weight= request.data.get('father_weight')
+        mother_weight= request.data.get('mother_weight')
+        
+        if not all([father_id,father_weight,mother_weight,mother_id]):
+            return Response({"error":"Missing required fields"})
+        
+        try:
+            father= FatherModel.objects.get(id=father_id,user=user)
+            mother= MotherModel.objects.get(id=mother_id,user=user)
+        except FatherModel.DoesNotExist:
+            return Response({"error":"Invalid father_id"})
+                
+        
+        
+        url= generateAIMixedImage(father.url,mother.url,father_weight,mother_weight)--> api call to an image gen model
+        
+        
+        child= ChildImage.objects.create(user=user,url=url,father=father,mother=mother) 
+               
+        return Response("Here is the child image")
