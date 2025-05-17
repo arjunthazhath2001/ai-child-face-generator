@@ -3,8 +3,9 @@ from rest_framework.response import Response
 from .s3 import generate_presigned_url
 from django.conf import settings
 import uuid
-from .models import FatherModel,MotherModel, ChildImage
+from .models import FatherModel,MotherModel, ChildImage,CustomUser
 from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth import get_user_model
 
 class GeneratePresignedURLView(APIView):
     
@@ -35,7 +36,7 @@ class GeneratePresignedURLView(APIView):
 
 
 class UploadFatherImage(APIView):
-    permission_classes=[IsAuthenticated]
+    # permission_classes=[IsAuthenticated]
 
     def post(self,request):
         file_url= request.data.get('file_url')
@@ -43,7 +44,7 @@ class UploadFatherImage(APIView):
         if not file_url:
             return Response({"error":"File url not found"})
         
-        user= request.user
+        user= CustomUser.objects.get(id=1)
         
         
         father= FatherModel.objects.create(user=user,url=file_url)
@@ -55,14 +56,15 @@ class UploadFatherImage(APIView):
         
     
 class UploadMotherImage(APIView):
-    permission_classes=[IsAuthenticated]
+    # permission_classes=[IsAuthenticated]
     def post(self,request):
         file_url= request.data.get('file_url')
         
         if not file_url:
             return Response({"error":"File url not found"})
         
-        user= request.user
+        user= CustomUser.objects.get(id=1)
+
         
         
         mother= MotherModel.objects.create(user=user,url=file_url)
