@@ -67,6 +67,21 @@ export default function Home() {
   };
 
 
+  const pollForResult= async(fatherId:number,motherId:number)=>{
+    const interval= setInterval(async()=>{
+      const res= await fetch(`http://localhost:8000/check-image/${fatherId}/${motherId}/`);
+      const data= await res.json();
+
+      if(data.status=="ready"){
+        clearInterval(interval);
+        alert("Child image ready:" + data.url);
+        setStatus("IMage ready")
+      } else{
+        console.log("still processing")
+      }
+    },5000)
+  }
+
   // Submit both images
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,8 +120,17 @@ export default function Home() {
       const dad= await dadInDB.json()
       
       if (mom && dad){
-        alert("momid:"+mom.message)
-        alert("dadid:"+dad.message)
+        const ouputInDB = await fetch("http://localhost:8000/generate/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            father_id: dad.message,
+            mother_id: mom.message
+          }),
+        });
+
+        pollForResult(dad.message,mom.message)
+      
       }
 
     } else {
@@ -119,23 +143,16 @@ export default function Home() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <h2>Father Image</h2>
+      <h2>Template Image</h2>
       <input type="file" accept="image/*" onChange={handleFatherChange} />
       {fatherPreview && <img src={fatherPreview} alt="Father Preview" width={150} />}
 
-      <h2>Mother Image</h2>
+      <h2>Target Image</h2>
       <input type="file" accept="image/*" onChange={handleMotherChange} />
       {motherPreview && <img src={motherPreview} alt="Mother Preview" width={150} />}
 
-      <div>
-      <label htmlFor="">Dad Resemblance</label>
-      <input type="text" className="text-black p-3 bg-white" placeholder="50"/> <span>%</span>
-      </div>
       
-      <div className="m-5">
-      <label htmlFor="">Mom Resemblance</label>
-      <input type="text"  className="text-black p-3 bg-white" placeholder="50"/> <span>%</span>
-      </div>
+      
 
       <button className="bg-blue-500 text-white px-8 py-3" type="submit">Upload</button>
 

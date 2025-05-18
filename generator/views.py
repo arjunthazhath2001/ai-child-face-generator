@@ -5,7 +5,10 @@ from django.conf import settings
 import uuid
 from .models import FatherModel,MotherModel, ChildImage,CustomUser
 from rest_framework.permissions import IsAuthenticated
-from django.contrib.auth import get_user_model
+from .test_replicate import generateAIMixedImage
+from concurrent.futures import ThreadPoolExecutor
+
+executor= ThreadPoolExecutor(max_workers=2)
 
 class GeneratePresignedURLView(APIView):
     
@@ -75,32 +78,44 @@ class UploadMotherImage(APIView):
             return Response({"error":"Try uploading again"},status=400)
         
 
-# class GenerateChildImage(APIView):
-#     permission_classes=[IsAuthenticated]
-    
-#     def post(self,request):
-#         user= request.user
+class GenerateChildImage(APIView):
+    # permission_classes=[IsAuthenticated]
+
+    def post(self,request):
+        user= CustomUser.objects.get(id=1)
+
+        template_id= int(request.data.get('father_id'))
+        target_id= int(request.data.get('mother_id'))
+
+
+        if not all([template_id,target_id]):
+            return Response({"error":"Missing required fields"})
+
+        try:
+            template= FatherModel.objects.get(id=template_id,user=user)
+            target= MotherModel.objects.get(id=target_id,user=user)
+            
+        except FatherModel.DoesNotExist:
+            return Response({"error":"Invalid template_id"})
         
-#         father_id= request.data.get('father_id')
-#         mother_id= request.data.get('mother_id')
+        def task():
+            print("calling replicate")
+            url= generateAIMixedImage(template.url,target.url)
+            print("child_url"+ str(url))
+            if url:
+                ChildImage.objects.create(user=user,url=url,father=template,mother=target) 
+            else:
+                print("Failed")
+        executor.submit(task)
+        return Response({"message": "processing"})
         
-#         father_weight= request.data.get('father_weight')
-#         mother_weight= request.data.get('mother_weight')
+
+class CheckChildImage(APIView):
+    def get(self,request,father_id,mother_id):
+        user= CustomUser.objects.get(id=1)
         
-#         if not all([father_id,father_weight,mother_weight,mother_id]):
-#             return Response({"error":"Missing required fields"})
-        
-#         try:
-#             father= FatherModel.objects.get(id=father_id,user=user)
-#             mother= MotherModel.objects.get(id=mother_id,user=user)
-#         except FatherModel.DoesNotExist:
-#             return Response({"error":"Invalid father_id"})
-                
-        
-        
-#         url= generateAIMixedImage(father.url,mother.url,father_weight,mother_weight)--> api call to an image gen model
-        
-        
-#         child= ChildImage.objects.create(user=user,url=url,father=father,mother=mother) 
-               
-#         return Response("Here is the child image")
+        try:
+            child= ChildImage.objects.get(user=user,father_id=father_id,mother_id=mother_id)
+            return Response({"status":"ready","url":child.url})
+        except ChildImage.DoesNotExist:
+            return Response({"status":"processing"})
