@@ -3,6 +3,7 @@ import { Metadata, Viewport } from "next";
 import { Link } from "@heroui/link";
 import clsx from "clsx";
 
+import { ClerkProvider } from "@clerk/nextjs";
 
 import { Providers } from "./providers";
 
@@ -34,13 +35,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
+    <ClerkProvider>
     <html suppressHydrationWarning lang="en">
       <head />
       <body
         className={clsx(
-          "min-h-screen bg-background font-sans antialiased",
+          "min-h-screen bg-gradient-to-br from-gray-900 via-black to-yellow-500 font-sans antialiased",
           fontSans.variable,
         )}
+        
       >
 
         <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
@@ -56,5 +59,6 @@ export default function RootLayout({
         </Providers>
       </body>
     </html>
+    </ClerkProvider>
   );
 }

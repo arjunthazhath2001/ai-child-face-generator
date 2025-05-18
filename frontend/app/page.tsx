@@ -1,5 +1,8 @@
 "use client";
+import { SignInButton, useAuth } from "@clerk/clerk-react";
+import { SignOutButton } from "@clerk/nextjs";
 import React, { useState } from "react";
+import LoginPage from "./login/[[...rest]]/page";
 
 export default function Home() {
   const [fatherFile, setFatherFile] = useState<File | null>(null);
@@ -138,10 +141,13 @@ export default function Home() {
     }
   };
 
-
-
+  const { sessionId } = useAuth()
+  if (!sessionId) {
+    return <LoginPage/>
+  }
 
   return (
+    <>
     <form onSubmit={handleSubmit}>
       <h2>Template Image</h2>
       <input type="file" accept="image/*" onChange={handleFatherChange} />
@@ -158,5 +164,13 @@ export default function Home() {
 
       {status && <p>{status}</p>}
     </form>
+
+    <SignOutButton signOutOptions={{ sessionId }}>
+    <button className="mt-6 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">
+      Sign Out
+    </button>
+  </SignOutButton>
+
+    </>
   );
 }
