@@ -3,12 +3,21 @@ import { Metadata, Viewport } from "next";
 import { Link } from "@heroui/link";
 import clsx from "clsx";
 
-import { ClerkProvider } from "@clerk/nextjs";
+import { shadesOfPurple } from '@clerk/themes'
 
 import { Providers } from "./providers";
 
 import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
+
+import {
+  ClerkProvider,
+  SignInButton,
+  SignUpButton,
+  SignedIn,
+  SignedOut,
+  UserButton,
+} from '@clerk/nextjs'
 
 
 export const metadata: Metadata = {
@@ -35,30 +44,39 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider>
-    <html suppressHydrationWarning lang="en">
-      <head />
-      <body
-        className={clsx(
-          "min-h-screen bg-gradient-to-br from-gray-900 via-black to-yellow-500 font-sans antialiased",
-          fontSans.variable,
-        )}
-        
-      >
+    <ClerkProvider appearance={{
+      baseTheme: shadesOfPurple,
+    }}>
+      <html suppressHydrationWarning lang="en">
+        <head />
+        <body
+          className={clsx(
+            "min-h-screen bg-white font-sans antialiased",
+            fontSans.variable,
+          )}
 
-        <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
-          <div className="relative flex flex-col h-screen">
+        > <header className="flex justify-end items-center p-4 gap-4 h-16">
+            <SignedOut>
+              <SignInButton />
+              <SignUpButton />
+            </SignedOut>
+            <SignedIn>
+              <UserButton />
+            </SignedIn>
+          </header>
+
+          <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
+            <div className="relative flex flex-col h-screen">
 
 
-            <main className="container mx-auto max-w-7xl pt-16 px-6 flex-grow">
-              {children}
-            </main>
+              <main className="container mx-auto max-w-7xl pt-16 px-6 flex-grow">
+                {children}
+              </main>
 
-
-          </div>
-        </Providers>
-      </body>
-    </html>
+            </div>
+          </Providers>
+        </body>
+      </html>
     </ClerkProvider>
   );
 }

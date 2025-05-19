@@ -2,7 +2,11 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 class CustomUser(AbstractUser):
-    pass
+    clerk_id = models.CharField(max_length=255, unique=True, null=True)
+    # Add any other fields you need
+
+    def __str__(self):
+        return self.username
 
 
 class FatherModel(models.Model):

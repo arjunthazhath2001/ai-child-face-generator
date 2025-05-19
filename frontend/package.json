@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.19.4",
+    "@clerk/themes": "^2.2.45",
     "@heroui/button": "2.2.19",
     "@heroui/code": "2.2.14",
     "@heroui/input": "2.4.19",
